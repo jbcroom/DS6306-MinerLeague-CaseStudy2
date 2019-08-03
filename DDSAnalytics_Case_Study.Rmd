@@ -1,0 +1,75 @@
+---
+title: "DDSAnalytics_Case_Study"
+author: "Brandon Croom"
+date: "August 2, 2019"
+output: 
+  html_document:
+  keep_md: True
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+###Initial Library and Data Setup
+```{r}
+#Install Packages that may be used
+#Install tidyverse and load it. This includes ggplot dplyr, and tidyr
+#install.packages("tidyverse")
+library(tidyverse)
+library(plyr)
+
+#Set Working directory and filepaths
+workingDirFilePath = "C:\\Users\\croomb\\OneDrive - BAT\\Desktop\\Personal Training\\SMU\\DS 6306 - Doing Data Science\\DS6306-MinerLeague-CaseStudy2\\DS6306-MinerLeague-CaseStudy2\\Data\\"
+
+sourceFile = "CaseStudy2-data-csv.csv"
+
+setwd(workingDirFilePath)
+
+#Load data from the file. Ensure strings don't come in as factors
+empDF = read.csv(sourceFile,stringsAsFactors = FALSE)
+```
+###Start Data Exploration
+```{r}
+#Perform some quick check to see if any data is missing
+summary(is.na(empDF))
+
+#Based on results don't see any NAs that we'll need to deal with
+
+#Investigate employee demographics gender rations
+genderCounts = count(empDF,"Gender")
+
+#Plot demographics
+ggplot(genderCounts, aes(x=genderCounts$Gender, y=genderCounts$freq, fill=genderCounts$Gender)) + geom_bar(stat="identity") + xlab("Gender") + ylab("Employee Count") + theme(legend.position = "none")
+
+#Investigate employee gender by department
+genderCounts = count(empDF,c("Gender","Department"))
+ggplot(genderCounts, aes(x=genderCounts$Gender, y=genderCounts$freq, fill=genderCounts$Department)) + geom_bar(stat="identity",position=position_dodge()) + xlab("Gender") + ylab("Employee Count")
+
+#Investigate employee gender by role
+genderCounts = count(empDF,c("Gender","JobRole"))
+ggplot(genderCounts, aes(x=genderCounts$Gender, y=genderCounts$freq, fill=genderCounts$JobRole)) + geom_bar(stat="identity",position=position_dodge()) + xlab("Gender") + ylab("Employee Count")
+
+#Get average age by gender
+aggregate(Age ~ Gender,data=empDF,mean)
+
+#Get average age by gender by department
+aggregate(Age ~ Gender + Department,data=empDF,mean)
+
+#Get average age by gender by job role
+aggregate(Age ~ Gender + JobRole,data=empDF,mean)
+
+#Get average job satisfaction by job role
+aggregate(JobSatisfaction ~ JobRole, data=empDF,mean)
+
+#Get average job satisfaction by job role by gender
+aggregate(JobSatisfaction ~ JobRole + Gender, data=empDF,mean)
+
+#Get average job satisfaction by marital status
+aggregate(JobSatisfaction ~ MaritalStatus + Gender, data=empDF,mean)
+
+
+
+
+
+
+
