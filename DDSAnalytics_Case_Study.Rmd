@@ -1,6 +1,6 @@
 ---
 title: "DDSAnalytics_Case_Study"
-author: "Brandon Croom"
+author: "The Miner League - Brandon Croom, Sandesh Ojha, Sangrae Cho"
 date: "August 2, 2019"
 output: 
   html_document:
@@ -10,13 +10,23 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-###Initial Library and Data Setup
-```{r}
-#Install Packages that may be used
-#Install tidyverse and load it. This includes ggplot dplyr, and tidyr
+#Problem Objective
+The team has been asked by DDSAnalytics to use an existing data set in order to predict employee turnover. The team has been asked to identify at least three contributing factors to turn over. Additionally, the team has been asked to provide any additional insight they may see coming from the data. 
+
+#Setup Steps
+##Initial Library Import and Data Loading Setup
+```{r initial_setup, message=FALSE}
+#Install Packages that may be used. Suppress loading messages for cleaniliness
+#NOTE: Install strings are encoded in the markup but commented out if a user needs to install
+# - Install tidyverse and load it. This includes ggplot dplyr, and tidyr
+# - Install plyr and load it
+# - Install corrplot and load it
 #install.packages("tidyverse")
+#install.packages("plyr")
+#install.packages("corrplot")
 library(tidyverse)
 library(plyr)
+library(corrplot)
 
 #Set Working directory and filepaths
 workingDirFilePath = "C:\\Users\\croomb\\OneDrive - BAT\\Desktop\\Personal Training\\SMU\\DS 6306 - Doing Data Science\\DS6306-MinerLeague-CaseStudy2\\DS6306-MinerLeague-CaseStudy2\\Data\\"
@@ -26,50 +36,455 @@ sourceFile = "CaseStudy2-data-csv.csv"
 setwd(workingDirFilePath)
 
 #Load data from the file. Ensure strings don't come in as factors
-empDF = read.csv(sourceFile,stringsAsFactors = FALSE)
+empDF_raw = read.csv(sourceFile)
 ```
-###Start Data Exploration
-```{r}
-#Perform some quick check to see if any data is missing
-summary(is.na(empDF))
 
-#Based on results don't see any NAs that we'll need to deal with
+##Initial Data Checks
+**check for general data structure
+**check for missing values
+```{r data_checks}
+#Check on number of rows and variables
+dim(empDF_raw)
 
-#Investigate employee demographics gender rations
-genderCounts = count(empDF,"Gender")
+#Get the names of the variables
+names(empDF_raw)
 
-#Plot demographics
-ggplot(genderCounts, aes(x=genderCounts$Gender, y=genderCounts$freq, fill=genderCounts$Gender)) + geom_bar(stat="identity") + xlab("Gender") + ylab("Employee Count") + theme(legend.position = "none")
+#Perform a summary view of the data
+summary(empDF_raw)
 
-#Investigate employee gender by department
-genderCounts = count(empDF,c("Gender","Department"))
-ggplot(genderCounts, aes(x=genderCounts$Gender, y=genderCounts$freq, fill=genderCounts$Department)) + geom_bar(stat="identity",position=position_dodge()) + xlab("Gender") + ylab("Employee Count")
+#Perform a check for any nulls in the data
+sum(is.na(empDF_raw))
 
-#Investigate employee gender by role
-genderCounts = count(empDF,c("Gender","JobRole"))
-ggplot(genderCounts, aes(x=genderCounts$Gender, y=genderCounts$freq, fill=genderCounts$JobRole)) + geom_bar(stat="identity",position=position_dodge()) + xlab("Gender") + ylab("Employee Count")
+#Looks like there are no NA values in the data
+```
 
-#Get average age by gender
-aggregate(Age ~ Gender,data=empDF,mean)
+##Data manipulation
+```{r data_manip}
+#Do some data manipulation to make things a bit easier on our EDA. We'll perform the following tasks resulting in a new data frame. This will allow us to get #back to the original data set should something go amiss
 
-#Get average age by gender by department
-aggregate(Age ~ Gender + Department,data=empDF,mean)
+#There are a bunch of catgorical values that look to be off a Likert scale. The data has the value. Let's add in the descriptor associated with the value to #allow for making things a bit nicer. We'll turn these values in to factors to do this. For code readability we'll break each statement up
 
-#Get average age by gender by job role
-aggregate(Age ~ Gender + JobRole,data=empDF,mean)
+#mutate Education
+empDF_raw = empDF_raw %>%
+  mutate(Education = as.factor(if_else(Education == 1,"Below College", if_else(Education == 2, "College", if_else(Education == 3, "Bachelor", if_else(Education == 4, "Master","Doctor"))))))
 
-#Get average job satisfaction by job role
-aggregate(JobSatisfaction ~ JobRole, data=empDF,mean)
+#mutate Environmental Satisfaction
+empDF_raw = empDF_raw %>%
+         mutate(EnvironmentSatisfaction = as.factor(if_else(EnvironmentSatisfaction == 1,"Low",if_else(EnvironmentSatisfaction == 2, "Medium", if_else(EnvironmentSatisfaction == 3, "High", "Very High")))))
 
-#Get average job satisfaction by job role by gender
-aggregate(JobSatisfaction ~ JobRole + Gender, data=empDF,mean)
+#mutate Job Involvement
+empDF_raw = empDF_raw %>% mutate(JobInvolvement = as.factor(if_else(JobInvolvement == 1,"Low",if_else(JobInvolvement == 2, "Medium",if_else(JobInvolvement == 3, "High", "Very High")))))
+ 
+#mutate Job Satisfaction
+empDF_raw = empDF_raw %>% mutate(JobSatisfaction = as.factor(if_else(JobSatisfaction == 1, "Low",if_else(JobSatisfaction == 2, "Medium",if_else(JobSatisfaction == 3, "High","Very High")))))
+ 
+#mutate Performance Rating
+empDF_raw = empDF_raw %>% mutate(PerformanceRating = as.factor(if_else(PerformanceRating == 1, "Low",if_else(PerformanceRating == 2, "Good", if_else(PerformanceRating == 3, "Excellent", "Outstanding")))))
 
-#Get average job satisfaction by marital status
-aggregate(JobSatisfaction ~ MaritalStatus + Gender, data=empDF,mean)
+#mutate Relationship Satisfaction
+empDF_raw = empDF_raw %>% mutate(RelationshipSatisfaction = as.factor(if_else(RelationshipSatisfaction == 1, "Low",if_else(RelationshipSatisfaction == 2, "Medium", if_else(RelationshipSatisfaction == 3, "High", "Very High")))))
+
+#mutate Work Life Balance
+empDF_raw = empDF_raw %>% mutate(WorkLifeBalance = as.factor(if_else(WorkLifeBalance == 1, "Bad",if_else(WorkLifeBalance == 2, "Good", if_else(WorkLifeBalance == 3, "Better", "Best")))))
+
+#mutate Job Level
+empDF_raw = empDF_raw %>% mutate(JobLevel = as.factor(JobLevel))
+
+#In looking at the summary data we can see that the following fields are "static" (e.g. have no variation). Let's remove them to ensure they don't get mixed in. 
+#Specifically:
+# - Over18 - all values are "Y"
+# - EmployeeCount - all values are 1
+# - StandardHours - no variation all values are 80
+# - EmployeeNumber - this is just a reference column
+empDF = dplyr::select(empDF_raw, -c("Over18","EmployeeCount","StandardHours","EmployeeNumber"))
+
+#Check out structure to make sure the columns were removed
+str(empDF)
+
+```
+***
+#Univariate EDA
+Look at the data values individually without worrying about the attrition variable. See if there are any interesting observations. Start first with non-categorical (numeric) variables and then analyze categorical variables.
+
+##Non-Categorical Variables
+###Employee Demographics - Basic
+```{r uni_non_cat_demo_basic}
+#Look at basic total employee demographics such as Age, Working Years, Companies worked for and Distance from Home
+#Age breakdown
+ggplot(empDF) + geom_histogram(aes(Age), binwidth=5, fill="green", col="black")
+
+#Total Working Years
+ggplot(empDF) + geom_histogram(aes(TotalWorkingYears),binwidth=5, fill="green", col="black")
+
+#Number of Companies Worked
+ggplot(empDF) + geom_histogram(aes(NumCompaniesWorked),binwidth=2, fill="green", col="black")
+
+#Distance From Home
+ggplot(empDF) + geom_histogram(aes(DistanceFromHome),binwidth=5, fill="green", col="black")
+```
+
+###Observations
+* Age data looks to be normally distributed.
+* Total Working Years, Number of Companies Worked For, and Distance From Home are all right skewed. Transformation of this data may be necessary for further analysis
 
 
+###Employee Demographics - Financial
+```{r uni_non_cat_demo_financial}
+#Look at total employee financial demographics such as DailyRate, HourlyRate, MonthlyRate
+
+#HourlyRate
+ggplot(empDF) + geom_histogram(aes(HourlyRate), binwidth = 5, fill="blue", col="black")
+
+#DailyRate
+ggplot(empDF) + geom_histogram(aes(DailyRate), binwidth = 100, fill="blue", col="black")
+
+#MonthlyRate
+ggplot(empDF) + geom_histogram(aes(MonthlyRate), binwidth = 1000, fill="blue", col="black")
+```
+
+###Observations
+* No patterns are observed in this data. 
+
+###Employee Demographics - Work Environment
+```{r uni_non_cat_demo_work}
+#Look at work environment dempgraphics such as income, years in current role,  time with current manager, years since last promotion
+#training time, years at company
+#Monthly Income
+ggplot(empDF) + geom_histogram(aes(MonthlyIncome), binwidth = 1000, fill = "orange",col = "black")
+
+#Percent Salary Hike
+ggplot(empDF) + geom_histogram(aes(PercentSalaryHike), binwidth = 1, fill = "orange",col = "black")
+
+#Years At Company
+ggplot(empDF) + geom_histogram(aes(YearsAtCompany), binwidth = 2, fill = "orange",col = "black")
+
+#Years in Current Role
+ggplot(empDF) + geom_histogram(aes(YearsInCurrentRole), binwidth = 2, fill = "orange",col = "black")
+
+#Years Since Last Promotion
+ggplot(empDF) + geom_histogram(aes(YearsSinceLastPromotion), binwidth = 2, fill = "orange",col = "black")
+
+#Years with Current Manager
+ggplot(empDF) + geom_histogram(aes(YearsWithCurrManager), binwidth = 2, fill = "orange",col = "black")
+```
+
+###Observations
+* All data for these observations is right skewed. Transformation of data may be needed for further analysis
+
+##Univariate EDA - Categorical Variables
+
+###Employee Demographics - Personal
+```{r uni_cat_demo_personal}
+#Investigate personal demographics in the data such as gender, education marital status, etc. 
+#Gender
+empDF %>%
+  group_by(Gender) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(Gender), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Gender") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 900))
+
+#Education
+empDF %>%
+  group_by(Education) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(Education), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Education") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 650))
+
+#Education Field
+empDF %>%
+  group_by(EducationField) %>%
+ dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(EducationField), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Education Field") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 650))
+
+#Marital Status
+empDF %>%
+  group_by(MaritalStatus) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(MaritalStatus), y = counts)) + geom_bar(stat = 'identity', fill = "coral1")+ ggtitle("Marital Status") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 750))
+
+#Relationship Satisfaction
+empDF %>%
+  group_by(RelationshipSatisfaction) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(RelationshipSatisfaction), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Relationship Satisfaction") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())+ scale_y_continuous(limits = c(0, 500))
+
+#Work Life Balance
+empDF %>%
+  group_by(WorkLifeBalance) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(WorkLifeBalance), y = counts)) + geom_bar(stat = 'identity', fill = "coral1")+ ggtitle("Work Life Balance") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 950))
+```
+
+###Observations:
+* Approximately 60% of the employees are male.
+* Approximately 39% of the employees have a bachelors degree, with 27% having a masters degree.
+* Approximately 41% of the employees have a life sciences degree.
+* Approximately 76% of the employees have a life science or medical degree.
+* Approximately 46% of the employees are married, with 32% being single.
+* More than 30% of the employees rate Relationship Satisfaction as High or Very High.
+* More than 60% of the employees rate Work Life Balance as Better.
 
 
+###Employee Demographics - Work Environment
+```{r uni_cat_demo_work}
+#Investigate work environment categorical variables such as Business Travel, Overtime, etc
 
+#Business Travel
+empDF %>%
+  group_by(BusinessTravel) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(BusinessTravel), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Business Travel") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =10,angle = 45, hjust = 1),axis.title.x=element_blank())+ scale_y_continuous(limits = c(0, 1100))
 
+#Environmental Satisfaction
+empDF %>%
+  group_by(EnvironmentSatisfaction) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(EnvironmentSatisfaction), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Environment Satisfaction") + geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =10,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 500))
 
+#Job Involvement
+empDF %>%
+  group_by(JobInvolvement) %>%
+ dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(JobInvolvement), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Job Involvement") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =10,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 900))
+
+#Job Satisfaction
+empDF %>%
+  group_by(JobSatisfaction) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(JobSatisfaction), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Job Satisfaction") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 500))
+
+#Over Time
+empDF %>%
+  group_by(OverTime) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(OverTime), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Over Time") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 1100))
+
+#Performance Rating
+empDF %>%
+  group_by(PerformanceRating) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(PerformanceRating), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Performance Rating") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 1300))
+
+#Employee By Department
+empDF %>%
+  group_by(Department) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(Department), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Department") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size = 7, angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Job Roles
+empDF %>%
+  group_by(JobRole) %>%
+  dplyr::summarise(counts = n()) %>%
+  ggplot(aes(x = as.factor(JobRole), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Job Role") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+```
+
+###Observations
+* Approximately 71% of the employees rarely travel for work.
+* Approximately 30% of the employees rate environment satisfaction as high or very high.
+* Approximately 59% of the employees rated their job involvement at work as high.
+* Approximately 30% of the employees rate job satisfaction as high or very high.
+* Approximately 72% of the employees do not work overtime.
+* Approximately 85% of the employees have an Excellent Performance Rating.
+* More than half (65%) of the employees work in Research & Development. 
+* Most employees work as Sales Executives, Research Scientists or Laboratory Technicians
+
+***
+#Bivariate EDA
+Now start analyzing data in relation to our attrition variable. Since attribution is the target variable we want to see if we uncover any hidden relationships. As before start with the non-categorical (numeric) variables first and then move to the categorical variables.
+
+##Non-Categorical Variables
+###Employee Demographics - Basic
+```{r biv_non_cat_basic}
+#Evaluate non-categorical variables as they relate to the attrition variable. We'll use density plots with alpha = 0.5
+#Age
+empDF %>%
+  ggplot(aes(x = Age, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Age") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Distance from Home
+empDF %>%
+  ggplot(aes(x = DistanceFromHome, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Distance From Home")  + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Number of Companies Worked
+empDF %>%
+  ggplot(aes(x = NumCompaniesWorked, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Number of Companies")  + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Total Working Years
+empDF %>%
+  ggplot(aes(x = TotalWorkingYears, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Total Working Years")  + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+```
+
+###Observations
+* Younger employees between 25-35 years have a higher attrition rate.
+* There is a higher attrition rate when the distance from home is greater than 10. Attrition rate is less below 10.
+* Attrition rate seems to be higher for employees who have work with 5 to 7 companies.
+* The highest attrition rates seem to be with employees with between 0 to 7 years of work experience.
+
+###Employee Demographics - Financial
+```{r biv_non_cat_finincial}
+#Evaluate non-categorical variables as they relate to the attrition variable for financial values. We'll use density plots with alpha = 0.5
+#Hourly Rate
+empDF %>%
+  ggplot(aes(x = HourlyRate, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Hourly Rate") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Daily Rate
+empDF %>%
+  ggplot(aes(x = DailyRate, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Daily Rate") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Monthly Rate
+empDF %>%
+  ggplot(aes(x = MonthlyRate, fill = Attrition)) + geom_density(alpha = 0.5)+ ggtitle("Monthly Rate") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+```
+
+###Observations
+* There are no patterns in this data.
+
+###Employee Demographics - Work Environment
+```{r biv_non_cat_work}
+#Evaluate non-categorical variables as they relate to the attrition variable for work environment values. We'll use density plots with alpha = 0.5
+#Monthly Income
+empDF %>%
+  ggplot(aes(x = MonthlyIncome, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Monthly Income") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Salary Hike
+empDF %>%
+  ggplot(aes(x = PercentSalaryHike, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Percentage Salary Hike") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Years at Company
+empDF %>%
+  ggplot(aes(x = YearsAtCompany, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years At Company") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Years In Role
+empDF %>%
+  ggplot(aes(x = YearsInCurrentRole, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years in Current Role") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Years Since Promotion
+empDF %>%
+  ggplot(aes(x = YearsSinceLastPromotion, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years Since Last Promotion") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+#Years with Current Manager
+empDF %>%
+  ggplot(aes(x = YearsWithCurrManager, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years With Current Manager") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+```
+
+###Observations
+* Peak attrition occurs when the monthly income rate is about $2500.
+* Peak attrition rate also occurs when the employee is with the company for approximately 0-2 years.
+* Attrition rate is higher when the employee is in the same role for 0-2 years or 6 years approximately, based off of the bi-modal nature of the graph.
+* Attrition rate is higher when the employee is with the same manager for less than 1.5 yeas or 6 years approximately, based off of the bi-modal nature of the graph. 
+
+##Bivariate EDA - Categorical Variables
+###Employee Demographics - Personal
+```{r biv_cat_personal}
+#Investigate categorical variables as they relate to the attrition variable. Focus on the personal variables in this section
+#Gender
+empDF %>%
+  group_by(Gender) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = Gender, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Gender") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 20))
+
+#Education
+empDF %>%
+  group_by(Education) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = Education, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Education") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 20))
+
+#Education Field
+empDF %>%
+  group_by(EducationField) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = EducationField, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Education Field") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
+
+#Marital Status
+empDF %>%
+  group_by(MaritalStatus) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = MaritalStatus, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Marital Status") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
+
+#Relationship Satisfaction
+empDF %>%
+  group_by(RelationshipSatisfaction) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = as.factor(RelationshipSatisfaction), y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Relationship Satisfaction") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
+
+#Work Life Balance
+empDF %>%
+  group_by(WorkLifeBalance) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = as.factor(WorkLifeBalance), y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Work Life Balance") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 35))
+```
+
+###Observations
+* Male attrition rate is higher than female attrition rate.
+* Attrition rate is approximately 18% for employees with no college education.
+* Attrition rate is highest for those employees with backgrounds in HR, Marketing or a Technical Degree.
+* Attrition rate is highest for single employees
+* Attrition rate is highest for employees with low relationship satisfaction
+* Attrition rate is highest for employees with bad work like balance
+
+###Employee Demographics - Work Environment
+```{r biv_cat_work}
+#Investigate work environment categorical variables such as Business Travel, Overtime, etc as they relate to attrition
+#Business Travel
+empDF %>%
+  group_by(BusinessTravel) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = BusinessTravel, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Business Travel") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
+
+#Environment Satisfaction
+empDF %>%
+  group_by(EnvironmentSatisfaction) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = EnvironmentSatisfaction, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Environment Satisfaction") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
+
+#Job Involvement
+empDF %>%
+  group_by(JobInvolvement) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = JobInvolvement, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Job Involvement") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 40))
+
+#Job Satisfaction
+empDF %>%
+  group_by(JobSatisfaction) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = JobSatisfaction, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Job Satisfaction") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
+
+#Overtime
+empDF %>%
+  group_by(OverTime) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = OverTime, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Over Time") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 35))
+
+#Performance Rating
+empDF %>%
+  group_by(PerformanceRating) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = as.factor(PerformanceRating), y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Performance Rating") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 20))
+
+#Department
+empDF %>%
+  group_by(Department) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = Department, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Department") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)
+
+#Job Role
+empDF %>%
+  group_by(JobRole) %>%
+  dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
+  ggplot(aes(x = JobRole, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Job Role") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)
+```
+
+###Observations
+* Employees who travel frequently have a higher attrition rate.
+* Employees who score environmental satisfaction, job involvement and job satisfaction low have higher attrition.
+* Employees who work overtime have a higher attrition rate (approximately 30%).
+* Employees in the Sales Department have the highest attrition rate at 20%.
+* Employees who are Sales Representatives have the highest attrition rate at 40%.
+
+***
+#Conclusion
+From the analysis above we can see that the following variables may have an influence on attrition:
+
+* Department
+* Job Role
+* Level of Education
+* Amount of Travel
+* Amount of Overtime
+* Employees with low satisfaction scores in Job Satisfaction, Job Engagement and Environmental conditions may also need to be taken into account.
