@@ -18,15 +18,22 @@ The team has been asked by DDSAnalytics to use an existing data set in order to 
 ```{r initial_setup, message=FALSE}
 #Install Packages that may be used. Suppress loading messages for cleaniliness
 #NOTE: Install strings are encoded in the markup but commented out if a user needs to install
-# - Install tidyverse and load it. This includes ggplot dplyr, and tidyr
-# - Install plyr and load it
-# - Install corrplot and load it
+# - Install tidyverse for data cleaning, easy of use and base plotting. This includes ggplot dplyr, and tidyr
+# - Install plyr for additional data cleaning items
+# - Install corrplot for correlation plots
+# - Install ggpubr for better graphic visual groupings
 #install.packages("tidyverse")
 #install.packages("plyr")
 #install.packages("corrplot")
+#install.packages("ggpubr")
+#install.packages("RColorBrewer")
+#install.packages("ggthemes")
 library(tidyverse)
 library(plyr)
 library(corrplot)
+library(ggpubr)
+library(RColorBrewer)
+library(ggthemes)
 
 #Set Working directory and filepaths
 workingDirFilePath = "C:\\Users\\croomb\\OneDrive - BAT\\Desktop\\Personal Training\\SMU\\DS 6306 - Doing Data Science\\DS6306-MinerLeague-CaseStudy2\\DS6306-MinerLeague-CaseStudy2\\Data\\"
@@ -108,19 +115,21 @@ Look at the data values individually without worrying about the attrition variab
 
 ##Non-Categorical Variables
 ###Employee Demographics - Basic
-```{r uni_non_cat_demo_basic}
+```{r uni_non_cat_demo_basic, fig.height=10, fig.width=10}
 #Look at basic total employee demographics such as Age, Working Years, Companies worked for and Distance from Home
 #Age breakdown
-ggplot(empDF) + geom_histogram(aes(Age), binwidth=5, fill="green", col="black")
+p1 = ggplot(empDF) + geom_histogram(aes(Age), binwidth=5, fill="green", col="black")
 
 #Total Working Years
-ggplot(empDF) + geom_histogram(aes(TotalWorkingYears),binwidth=5, fill="green", col="black")
+p2 = ggplot(empDF) + geom_histogram(aes(TotalWorkingYears),binwidth=5, fill="green", col="black")
 
 #Number of Companies Worked
-ggplot(empDF) + geom_histogram(aes(NumCompaniesWorked),binwidth=2, fill="green", col="black")
+p3 = ggplot(empDF) + geom_histogram(aes(NumCompaniesWorked),binwidth=2, fill="green", col="black")
 
 #Distance From Home
-ggplot(empDF) + geom_histogram(aes(DistanceFromHome),binwidth=5, fill="green", col="black")
+p4 = ggplot(empDF) + geom_histogram(aes(DistanceFromHome),binwidth=5, fill="green", col="black")
+
+ggarrange(p1,p2,p3,p4)
 ```
 
 ###Observations
@@ -129,43 +138,47 @@ ggplot(empDF) + geom_histogram(aes(DistanceFromHome),binwidth=5, fill="green", c
 
 
 ###Employee Demographics - Financial
-```{r uni_non_cat_demo_financial}
+```{r uni_non_cat_demo_financial, fig.height=10, fig.width=10}
 #Look at total employee financial demographics such as DailyRate, HourlyRate, MonthlyRate
 
 #HourlyRate
-ggplot(empDF) + geom_histogram(aes(HourlyRate), binwidth = 5, fill="blue", col="black")
+p1 = ggplot(empDF) + geom_histogram(aes(HourlyRate), binwidth = 5, fill="blue", col="black")
 
 #DailyRate
-ggplot(empDF) + geom_histogram(aes(DailyRate), binwidth = 100, fill="blue", col="black")
+p2 = ggplot(empDF) + geom_histogram(aes(DailyRate), binwidth = 100, fill="blue", col="black")
 
 #MonthlyRate
-ggplot(empDF) + geom_histogram(aes(MonthlyRate), binwidth = 1000, fill="blue", col="black")
+p3 = ggplot(empDF) + geom_histogram(aes(MonthlyRate), binwidth = 1000, fill="blue", col="black")
+
+ggarrange(p1,p2,p3)
 ```
 
 ###Observations
 * No patterns are observed in this data. 
 
 ###Employee Demographics - Work Environment
-```{r uni_non_cat_demo_work}
+```{r uni_non_cat_demo_work,fig.height=10, fig.width=10}
 #Look at work environment dempgraphics such as income, years in current role,  time with current manager, years since last promotion
 #training time, years at company
 #Monthly Income
-ggplot(empDF) + geom_histogram(aes(MonthlyIncome), binwidth = 1000, fill = "orange",col = "black")
+p1 = ggplot(empDF) + geom_histogram(aes(MonthlyIncome), binwidth = 1000, fill = "orange",col = "black")
 
 #Percent Salary Hike
-ggplot(empDF) + geom_histogram(aes(PercentSalaryHike), binwidth = 1, fill = "orange",col = "black")
+p2 = ggplot(empDF) + geom_histogram(aes(PercentSalaryHike), binwidth = 1, fill = "orange",col = "black")
 
 #Years At Company
-ggplot(empDF) + geom_histogram(aes(YearsAtCompany), binwidth = 2, fill = "orange",col = "black")
+p3 = ggplot(empDF) + geom_histogram(aes(YearsAtCompany), binwidth = 2, fill = "orange",col = "black")
 
 #Years in Current Role
-ggplot(empDF) + geom_histogram(aes(YearsInCurrentRole), binwidth = 2, fill = "orange",col = "black")
+p4 = ggplot(empDF) + geom_histogram(aes(YearsInCurrentRole), binwidth = 2, fill = "orange",col = "black")
 
 #Years Since Last Promotion
-ggplot(empDF) + geom_histogram(aes(YearsSinceLastPromotion), binwidth = 2, fill = "orange",col = "black")
+p5 = ggplot(empDF) + geom_histogram(aes(YearsSinceLastPromotion), binwidth = 2, fill = "orange",col = "black")
 
 #Years with Current Manager
-ggplot(empDF) + geom_histogram(aes(YearsWithCurrManager), binwidth = 2, fill = "orange",col = "black")
+p6 = ggplot(empDF) + geom_histogram(aes(YearsWithCurrManager), binwidth = 2, fill = "orange",col = "black")
+
+ggarrange(p1,p2,p3,p4,p5,p6)
 ```
 
 ###Observations
@@ -174,43 +187,45 @@ ggplot(empDF) + geom_histogram(aes(YearsWithCurrManager), binwidth = 2, fill = "
 ##Univariate EDA - Categorical Variables
 
 ###Employee Demographics - Personal
-```{r uni_cat_demo_personal}
+```{r uni_cat_demo_personal,fig.height=10, fig.width=10}
 #Investigate personal demographics in the data such as gender, education marital status, etc. 
 #Gender
-empDF %>%
+p1 = empDF %>%
   group_by(Gender) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(Gender), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Gender") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 900))
 
 #Education
-empDF %>%
+p2 = empDF %>%
   group_by(Education) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(Education), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Education") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 650))
 
 #Education Field
-empDF %>%
+p3 = empDF %>%
   group_by(EducationField) %>%
  dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(EducationField), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Education Field") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 650))
 
 #Marital Status
-empDF %>%
+p4 = empDF %>%
   group_by(MaritalStatus) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(MaritalStatus), y = counts)) + geom_bar(stat = 'identity', fill = "coral1")+ ggtitle("Marital Status") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 750))
 
 #Relationship Satisfaction
-empDF %>%
+p5 = empDF %>%
   group_by(RelationshipSatisfaction) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(RelationshipSatisfaction), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Relationship Satisfaction") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())+ scale_y_continuous(limits = c(0, 500))
 
 #Work Life Balance
-empDF %>%
+p6 = empDF %>%
   group_by(WorkLifeBalance) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(WorkLifeBalance), y = counts)) + geom_bar(stat = 'identity', fill = "coral1")+ ggtitle("Work Life Balance") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 950))
+
+ggarrange(p1,p2,p3,p4,p5,p6)
 ```
 
 ###Observations:
@@ -224,56 +239,58 @@ empDF %>%
 
 
 ###Employee Demographics - Work Environment
-```{r uni_cat_demo_work}
+```{r uni_cat_demo_work, fig.height=10, fig.width=10}
 #Investigate work environment categorical variables such as Business Travel, Overtime, etc
 
 #Business Travel
-empDF %>%
+p1 = empDF %>%
   group_by(BusinessTravel) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(BusinessTravel), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Business Travel") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =10,angle = 45, hjust = 1),axis.title.x=element_blank())+ scale_y_continuous(limits = c(0, 1100))
 
 #Environmental Satisfaction
-empDF %>%
+p2 = empDF %>%
   group_by(EnvironmentSatisfaction) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(EnvironmentSatisfaction), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Environment Satisfaction") + geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =10,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 500))
 
 #Job Involvement
-empDF %>%
+p3 = empDF %>%
   group_by(JobInvolvement) %>%
  dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(JobInvolvement), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Job Involvement") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =10,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 900))
 
 #Job Satisfaction
-empDF %>%
+p4 = empDF %>%
   group_by(JobSatisfaction) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(JobSatisfaction), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Job Satisfaction") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 500))
 
 #Over Time
-empDF %>%
+p5 = empDF %>%
   group_by(OverTime) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(OverTime), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Over Time") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 1100))
 
 #Performance Rating
-empDF %>%
+p6 = empDF %>%
   group_by(PerformanceRating) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(PerformanceRating), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Performance Rating") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) + scale_y_continuous(limits = c(0, 1300))
 
 #Employee By Department
-empDF %>%
+p7 = empDF %>%
   group_by(Department) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(Department), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Department") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ theme(plot.title = element_text(size =10),axis.text.x = element_text(size = 7, angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Job Roles
-empDF %>%
+p8 = empDF %>%
   group_by(JobRole) %>%
   dplyr::summarise(counts = n()) %>%
   ggplot(aes(x = as.factor(JobRole), y = counts)) + geom_bar(stat = 'identity', fill = "coral1") + ggtitle("Job Role") +geom_text(aes(label=counts), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25) + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+ggarrange(p1,p2,p3,p4,p5,p6,p7,p8,ncol=2,nrow=4)
 ```
 
 ###Observations
@@ -292,23 +309,25 @@ Now start analyzing data in relation to our attrition variable. Since attributio
 
 ##Non-Categorical Variables
 ###Employee Demographics - Basic
-```{r biv_non_cat_basic}
+```{r biv_non_cat_basic, fig.height=10, fig.width=10}
 #Evaluate non-categorical variables as they relate to the attrition variable. We'll use density plots with alpha = 0.5
 #Age
-empDF %>%
+p1 = empDF %>%
   ggplot(aes(x = Age, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Age") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Distance from Home
-empDF %>%
+p2 = empDF %>%
   ggplot(aes(x = DistanceFromHome, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Distance From Home")  + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Number of Companies Worked
-empDF %>%
+p3 = empDF %>%
   ggplot(aes(x = NumCompaniesWorked, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Number of Companies")  + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Total Working Years
-empDF %>%
+p4 = empDF %>%
   ggplot(aes(x = TotalWorkingYears, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Total Working Years")  + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+ggarrange(p1,p2,p3,p4)
 ```
 
 ###Observations
@@ -318,50 +337,54 @@ empDF %>%
 * The highest attrition rates seem to be with employees with between 0 to 7 years of work experience.
 
 ###Employee Demographics - Financial
-```{r biv_non_cat_finincial}
+```{r biv_non_cat_financial, fig.height=10, fig.width=10}
 #Evaluate non-categorical variables as they relate to the attrition variable for financial values. We'll use density plots with alpha = 0.5
 #Hourly Rate
-empDF %>%
+p1 = empDF %>%
   ggplot(aes(x = HourlyRate, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Hourly Rate") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Daily Rate
-empDF %>%
+p2 = empDF %>%
   ggplot(aes(x = DailyRate, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Daily Rate") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Monthly Rate
-empDF %>%
+p3 = empDF %>%
   ggplot(aes(x = MonthlyRate, fill = Attrition)) + geom_density(alpha = 0.5)+ ggtitle("Monthly Rate") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+ggarrange(p1,p2,p3)
 ```
 
 ###Observations
-* There are no patterns in this data.
+* There are no observable patterns in this data.
 
 ###Employee Demographics - Work Environment
-```{r biv_non_cat_work}
+```{r biv_non_cat_work, fig.height=10, fig.width=10}
 #Evaluate non-categorical variables as they relate to the attrition variable for work environment values. We'll use density plots with alpha = 0.5
 #Monthly Income
-empDF %>%
+p1 = empDF %>%
   ggplot(aes(x = MonthlyIncome, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Monthly Income") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Salary Hike
-empDF %>%
+p2 = empDF %>%
   ggplot(aes(x = PercentSalaryHike, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Percentage Salary Hike") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Years at Company
-empDF %>%
+p3 = empDF %>%
   ggplot(aes(x = YearsAtCompany, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years At Company") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Years In Role
-empDF %>%
+p4 = empDF %>%
   ggplot(aes(x = YearsInCurrentRole, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years in Current Role") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Years Since Promotion
-empDF %>%
+p5 = empDF %>%
   ggplot(aes(x = YearsSinceLastPromotion, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years Since Last Promotion") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
 
 #Years with Current Manager
-empDF %>%
+p6 = empDF %>%
   ggplot(aes(x = YearsWithCurrManager, fill = Attrition)) + geom_density(alpha = 0.5) + ggtitle("Years With Current Manager") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank())
+
+ggarrange(p1,p2,p3,p4,p5,p6, ncol=2, nrow=3)
 ```
 
 ###Observations
@@ -372,43 +395,45 @@ empDF %>%
 
 ##Bivariate EDA - Categorical Variables
 ###Employee Demographics - Personal
-```{r biv_cat_personal}
+```{r biv_cat_personal, fig.height=10, fig.width=10}
 #Investigate categorical variables as they relate to the attrition variable. Focus on the personal variables in this section
 #Gender
-empDF %>%
+p1 = empDF %>%
   group_by(Gender) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = Gender, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Gender") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 20))
 
 #Education
-empDF %>%
+p2 = empDF %>%
   group_by(Education) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = Education, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Education") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 20))
 
 #Education Field
-empDF %>%
+p3 = empDF %>%
   group_by(EducationField) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = EducationField, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Education Field") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
 
 #Marital Status
-empDF %>%
+p4 = empDF %>%
   group_by(MaritalStatus) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = MaritalStatus, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Marital Status") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
 
 #Relationship Satisfaction
-empDF %>%
+p5 = empDF %>%
   group_by(RelationshipSatisfaction) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = as.factor(RelationshipSatisfaction), y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Relationship Satisfaction") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
 
 #Work Life Balance
-empDF %>%
+p6 = empDF %>%
   group_by(WorkLifeBalance) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = as.factor(WorkLifeBalance), y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Work Life Balance") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 35))
+
+ggarrange(p1,p2,p3,p4,p5,p6)
 ```
 
 ###Observations
@@ -420,55 +445,57 @@ empDF %>%
 * Attrition rate is highest for employees with bad work like balance
 
 ###Employee Demographics - Work Environment
-```{r biv_cat_work}
+```{r biv_cat_work, fig.height=10, fig.width=10}
 #Investigate work environment categorical variables such as Business Travel, Overtime, etc as they relate to attrition
 #Business Travel
-empDF %>%
+p1 = empDF %>%
   group_by(BusinessTravel) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = BusinessTravel, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Business Travel") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
 
 #Environment Satisfaction
-empDF %>%
+p2 = empDF %>%
   group_by(EnvironmentSatisfaction) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = EnvironmentSatisfaction, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Environment Satisfaction") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
 
 #Job Involvement
-empDF %>%
+p3 = empDF %>%
   group_by(JobInvolvement) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = JobInvolvement, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Job Involvement") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 40))
 
 #Job Satisfaction
-empDF %>%
+p4 = empDF %>%
   group_by(JobSatisfaction) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = JobSatisfaction, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Job Satisfaction") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 30))
 
 #Overtime
-empDF %>%
+p5 = empDF %>%
   group_by(OverTime) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = OverTime, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Over Time") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 35))
 
 #Performance Rating
-empDF %>%
+p6 = empDF %>%
   group_by(PerformanceRating) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = as.factor(PerformanceRating), y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Performance Rating") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)+ scale_y_continuous(limits = c(0, 20))
 
 #Department
-empDF %>%
+p7 = empDF %>%
   group_by(Department) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = Department, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Department") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)
 
 #Job Role
-empDF %>%
+p8 = empDF %>%
   group_by(JobRole) %>%
   dplyr::summarise(attrition_rate = round((sum(if_else(Attrition == "Yes",1,0))/n()*100),2)) %>%
   ggplot(aes(x = JobRole, y = attrition_rate))+ geom_bar(stat = 'identity',fill = "blue") + ggtitle("Attrition Rate - Job Role") + theme(plot.title = element_text(size =10),axis.text.x = element_text(size =7,angle = 45, hjust = 1),axis.title.x=element_blank()) +geom_text(aes(label=attrition_rate), size = 2.5, position=position_dodge(width=0.2), vjust=-0.25)
+
+ggarrange(p1,p2,p3,p4,p5,p6,p7,p8)
 ```
 
 ###Observations
@@ -478,6 +505,45 @@ empDF %>%
 * Employees in the Sales Department have the highest attrition rate at 20%.
 * Employees who are Sales Representatives have the highest attrition rate at 40%.
 
+***
+#Correlation
+Now that we've looked at the variables in depth, let's see what correlations we can find in the data. Break the data up into non-categorical and categorical variables just as before
+Credit to David Josephs - TA for DS6306 for code for the correlator function and guidance on how best to approach looking at correlation
+
+##Non-Categorical Correlations
+For Non-Categorical (numeric) variables we'll use a heatmap with correlation coefficients
+```{r non_cat_corr, fig.width=10, fig.height=10}
+
+#Credit to David Joesphs for the function to create the correlation plot.
+correlator  <-  function(df, title){
+
+	df %>%
+
+		keep(is.numeric) %>%
+
+		tidyr::drop_na() %>%
+
+		cor %>%
+
+		corrplot( addCoef.col = "white", number.digits = 2,
+
+			 number.cex = 0.5, method="square",
+
+			 order="hclust", title=title,
+
+			 tl.srt=45, tl.cex = 0.8, mar=c(0,0,1,0))
+
+}
+
+
+correlator(empDF, "Non-Categorical Variable Heatmap")
+```
+
+##Categorical Correlations
+For categorical variables we'll look at boxplots and violin plots
+```{r cat_corr, fig.width=10, fig.height=10}
+
+```
 ***
 #Conclusion
 From the analysis above we can see that the following variables may have an influence on attrition:
