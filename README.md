@@ -35,5 +35,5 @@ the purpose of the study. This folder contains files.
 | Researcher | Questions of Interest |
 |:-----------:|:---------------------:|
 |Brandon Croom|Data cleaning, initial coding   |
-|Sandesh Ojha|Presentation perp, editing code |
+|Sandesh Ojha|Presentation prep, editing code |
 |Sangrae Cho|Readme, editing code|
