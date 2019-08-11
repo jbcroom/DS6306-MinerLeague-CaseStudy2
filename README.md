@@ -48,7 +48,7 @@ This study contains an exploratatory data analysis of a single data set `CaseStu
 |YearsSinceLastPromotion  | Number of years since employee was last promoted |
 |YearsWithCurrManager     | Number of years the employee has been with their current manager |
 
-Data Definitions for Specific Features:
+**Data Definitions for Specific Features:**
 
 Feature: Education
 
