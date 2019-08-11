@@ -4,7 +4,7 @@
 - Brandon Croom, Sandesh Ojha, Sangrae Cho
 
 ### Study Overview
-This study contains an exploratatory data analysis of a single data set 'CaseStudy2-data'. The objective is to determine factors that contribute to employee attrition based on the variables provided in the data set.
+This study contains an exploratatory data analysis of a single data set `CaseStudy2-data`. The team has been asked to evaluate the data set and attempt to determine which if any of the features could be contributing factors for employee attrition. The team has also been asked to provide any other insights that the data may expose as part of their analysis
 
 ### The Data
 
