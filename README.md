@@ -109,8 +109,7 @@ Feature: WorkLifeBalance
 - `CaseStudyInfo/` Contains all the background information important for understanding
 the purpose of the study. This folder contains files.
 
-  + `Case Study 02.pdf` The entire case study file that shows the list of questions being answered
-  in the study.
+  + `Case Study 02.pdf` The entire case study file that outlines the objectives of the study.
   
 - `Data/` This folder contains all the data files that is used in the study.
 
