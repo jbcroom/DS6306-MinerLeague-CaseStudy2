@@ -547,7 +547,6 @@ correlator(empDF, "Non-Categorical Variable Heatmap")
 * YearsAtCompany and YearsInCurrentRole are highly correlated (0.76)
 * YearsAtCompany and YearsWithCurrManager are highly correlated (0.77)
 * YearsAtCompany and TotalWorkingYears are highly correlated (0.63)
-* Age and TotalWorkingYears are highly correlated (0.68)
 * MonthyIncome and TotalWorkingYears are highly correlated (0.77)
 
 ***
