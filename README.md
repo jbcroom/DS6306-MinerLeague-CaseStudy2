@@ -121,7 +121,7 @@ the purpose of the study. This folder contains files.
  
  - `DDSAnalytics_Case_Study.html` contains the HTML output of the RMarkdown file.
  
- - `Miner League Presentation.pptx` contains a PowerPoint presentation developed off of the analysis performed in `DDSAnalytics_Case_Study.Rmd`to allow for easily reporting on analysis.
+ - `MinerLeague Presentation Case Study 2.pptx` contains a PowerPoint presentation developed off of the analysis performed in `DDSAnalytics_Case_Study.Rmd`to allow for easily reporting on analysis.
 
 
 ### Researcher Information & Responsibilities
