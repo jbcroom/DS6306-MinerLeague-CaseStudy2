@@ -2,9 +2,10 @@
 title: "DDSAnalytics_Case_Study"
 author: "The Miner League - Brandon Croom, Sandesh Ojha, Sangrae Cho"
 date: "August 2, 2019"
-output: 
-  html_document:
-  keep_md: True
+output:
+  html_document: null
+  keep_md: yes
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -539,11 +540,16 @@ correlator  <-  function(df, title){
 correlator(empDF, "Non-Categorical Variable Heatmap")
 ```
 
-##Categorical Correlations
-For categorical variables we'll look at boxplots and violin plots
-```{r cat_corr, fig.width=10, fig.height=10}
+###Observations
 
-```
+* YearsInCurrentRole and YearsAtCompany are highly correlated (0.76)
+* YearsInCurrentRole and YearsWithCurrManager are highly correlated (0.71)
+* YearsAtCompany and YearsInCurrentRole are highly correlated (0.76)
+* YearsAtCompany and YearsWithCurrManager are highly correlated (0.77)
+* YearsAtCompany and TotalWorkingYears are highly correlated (0.63)
+* Age and TotalWorkingYears are highly correlated (0.68)
+* MonthyIncome and TotalWorkingYears are highly correlated (0.77)
+
 ***
 #Conclusion
 From the analysis above we can see that the following variables may have an influence on attrition:
